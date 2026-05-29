@@ -14,7 +14,27 @@ npm start
 
 ## Деплой на Railway
 
-Репозиторий подключён к [Railway](https://railway.com). Команда запуска: `npm start` (порт задаётся через `PORT`).
+### Быстрый способ (через сайт)
+
+1. Откройте: [railway.com/new/github](https://railway.com/new/github?q=Kazusagava%2Fquizai-ui)
+2. Войдите в Railway и выберите репозиторий **quizai-ui**
+3. Railway сам соберёт проект (`npm start`)
+4. В сервисе: **Settings → Networking → Generate Domain** — получите публичную ссылку
+
+### Через CLI (после `railway login`)
+
+```powershell
+cd C:\Users\user\Projects\quizai-ui
+railway init
+railway up
+railway domain
+```
+
+### Автодеплой из GitHub Actions
+
+1. [Railway](https://railway.com) → Account Settings → **Tokens** → Create token
+2. GitHub → репозиторий **quizai-ui** → Settings → Secrets → **Actions** → `RAILWAY_TOKEN`
+3. При каждом push в `main` сайт будет обновляться автоматически
 
 ## Возможности
 
