@@ -2,7 +2,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const PORT = 5173;
+const PORT = Number(process.env.PORT) || 5173;
+const HOST = "0.0.0.0";
 const ROOT = __dirname;
 
 const mime = {
@@ -36,6 +37,6 @@ http
       res.end(data);
     });
   })
-  .listen(PORT, () => {
-    console.log(`QuizAI: http://localhost:${PORT}`);
+  .listen(PORT, HOST, () => {
+    console.log(`QuizAI listening on ${HOST}:${PORT}`);
   });

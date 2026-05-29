@@ -1,0 +1,12 @@
+{
+  "name": "quizai-ui",
+  "version": "1.0.0",
+  "description": "QuizAI — interactive quiz generator UI (demo)",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node serve.js"
+  }
+}
