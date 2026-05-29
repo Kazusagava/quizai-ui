@@ -23,3 +23,28 @@ node serve.js
 ## Стек
 
 HTML, CSS, vanilla JavaScript
+
+## GitHub
+
+Локальный репозиторий и первый commit уже созданы.
+
+1. Войдите в GitHub (один раз):
+
+```powershell
+gh auth login
+```
+
+2. Создайте репозиторий и отправьте код:
+
+```powershell
+.\push-to-github.ps1
+```
+
+Или вручную:
+
+```powershell
+git branch -M main
+gh repo create quizai-ui --public --source=. --remote=origin --push
+```
+
+Если имя `quizai-ui` занято, укажите другое: `gh repo create YOUR-NAME --public --source=. --remote=origin --push`
