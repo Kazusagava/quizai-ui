@@ -1,0 +1,3182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizAI — Generation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+/* QuizAI — Design tokens & layout */
+:root {
+  --bg: #0b0b0e;
+  --bg-elevated: #121218;
+  --accent: #7c5dfa;
+  --accent-hover: #6b4de8;
+  --accent-glow: rgba(124, 93, 250, 0.35);
+  --success: #10b981;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --card: rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text: #ffffff;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --nav-h: 64px;
+  --sidebar-left: 280px;
+  --sidebar-right: 260px;
+  --font: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 93, 250, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(16, 185, 129, 0.06), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ——— Top nav ——— */
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  background: rgba(11, 11, 14, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-links a {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding: 0.35rem 0;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--text);
+}
+
+.nav-links a.active {
+  color: var(--text);
+}
+
+.nav-links a.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lang-switch {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem;
+}
+
+.lang-switch button {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.lang-switch button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ——— Auth nav ——— */
+.auth-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-nav.hidden,
+.user-menu.hidden {
+  display: none !important;
+}
+
+.btn-auth-ghost {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+}
+
+.btn-auth-ghost:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-auth-primary {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.btn-auth-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  border: 2px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.avatar:hover {
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 220px;
+  padding: 1rem;
+  z-index: 200;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.user-dropdown.hidden {
+  display: none;
+}
+
+.user-dropdown-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.user-dropdown-email {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 0.85rem;
+  word-break: break-all;
+}
+
+.user-dropdown button {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.user-dropdown button:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ——— Auth modal ——— */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 1.75rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.auth-modal-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.auth-modal-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.auth-form.hidden {
+  display: none;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.auth-form input.invalid {
+  border-color: #ef4444;
+}
+
+.checkbox-label {
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 0.6rem !important;
+  font-weight: 400 !important;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  margin-top: 0.2rem;
+  accent-color: var(--accent);
+}
+
+.form-error {
+  font-size: 0.8rem;
+  color: #ef4444;
+  margin: -0.25rem 0 0;
+}
+
+.form-error.hidden {
+  display: none;
+}
+
+.btn-auth-submit {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+  background: linear-gradient(135deg, var(--accent), #9b7dff);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.btn-auth-submit:hover {
+  transform: translateY(-1px);
+}
+
+.btn-auth-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ——— Main layout ——— */
+.app-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--sidebar-left) 1fr var(--sidebar-right);
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem 2rem;
+  max-width: 1920px;
+  margin: 0 auto;
+  min-height: calc(100vh - var(--nav-h));
+}
+
+/* ——— Glass card ——— */
+.glass {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+}
+
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+
+.section-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+}
+
+/* ——— Left sidebar ——— */
+.config-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.config-block {
+  padding: 1.1rem;
+}
+
+.config-block h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+/* Question types */
+.type-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.type-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  background: rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.type-card:hover {
+  border-color: rgba(124, 93, 250, 0.4);
+}
+
+.type-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 20px var(--accent-glow);
+}
+
+.type-card .icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(124, 93, 250, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.type-card.active .icon {
+  background: var(--accent);
+}
+
+.type-card .label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.type-card .desc {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+/* Segmented control */
+.segmented {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+  border: 1px solid var(--card-border);
+}
+
+.segmented button {
+  flex: 1;
+  padding: 0.5rem 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.segmented button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+/* Count pills */
+.count-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.count-pills button {
+  min-width: 48px;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.count-pills button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Language list */
+.lang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.lang-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+}
+
+.lang-list button:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lang-list button.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(124, 93, 250, 0.08);
+}
+
+.lang-list .flag {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* Mobile config toggle */
+.config-toggle {
+  display: none;
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.config-sidebar.collapsed .config-panel {
+  display: none;
+}
+
+/* ——— Center ——— */
+.main-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ai-box {
+  padding: 1.25rem;
+}
+
+.ai-box textarea {
+  width: 100%;
+  min-height: 140px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.ai-box textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.ai-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  align-items: center;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.toolbar-btn:hover {
+  color: var(--text);
+  border-color: rgba(124, 93, 250, 0.5);
+  background: rgba(124, 93, 250, 0.08);
+}
+
+.char-counter {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.char-counter.warn {
+  color: #f59e0b;
+}
+
+.btn-generate {
+  position: relative;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.9rem 1.25rem;
+  background: linear-gradient(135deg, var(--accent), #9b7dff);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-generate:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px var(--accent-glow);
+}
+
+.btn-generate:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-generate.loading .btn-text {
+  opacity: 0;
+}
+
+.btn-generate .spinner {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  position: absolute;
+}
+
+.btn-generate.loading .spinner {
+  display: block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Stats bar */
+.stats-bar {
+  display: none;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.stats-bar.visible {
+  display: flex;
+}
+
+.stats-bar span strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Results */
+.results-section {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.results-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+}
+
+.view-tabs button {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.view-tabs button.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.result-actions button {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.result-actions button:hover {
+  color: var(--text);
+  border-color: rgba(124, 93, 250, 0.4);
+}
+
+/* Questions container */
+.questions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.questions-container.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.questions-container.view-preview {
+  align-items: center;
+}
+
+.questions-container.view-preview .question-card {
+  max-width: 640px;
+  width: 100%;
+}
+
+.questions-container.view-preview .question-card:not(.preview-active) {
+  display: none;
+}
+
+.preview-nav {
+  display: none;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.questions-container.view-preview + .preview-nav,
+.preview-nav.visible {
+  display: flex;
+}
+
+.preview-nav button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.preview-nav button:hover {
+  border-color: var(--accent);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.empty-state .icon-large {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+/* Question card */
+.question-card {
+  padding: 1.1rem 1.2rem;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.question-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.q-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.q-number {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-text {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding-right: 3rem;
+}
+
+.q-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.q-actions button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.q-actions button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.q-actions button.delete:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-left: 2.75rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.option.correct {
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--text);
+}
+
+.option .radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+  flex-shrink: 0;
+}
+
+.option.correct .radio {
+  border-color: var(--success);
+  background: var(--success);
+  box-shadow: inset 0 0 0 3px var(--bg);
+}
+
+/* ——— Right sidebar ——— */
+.info-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.info-block {
+  padding: 1.1rem;
+}
+
+.info-block h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+  color: var(--text-muted);
+}
+
+.recent-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 0.85rem;
+}
+
+.recent-list li:last-child {
+  border-bottom: none;
+}
+
+.recent-list .name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.recent-list .time {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* Usage gauge */
+.usage-widget {
+  text-align: center;
+}
+
+.gauge-wrap {
+  position: relative;
+  width: 120px;
+  height: 60px;
+  margin: 0 auto 0.75rem;
+  overflow: hidden;
+}
+
+.gauge-wrap svg {
+  width: 120px;
+  height: 120px;
+  transform: rotate(-90deg);
+  margin-top: -60px;
+}
+
+.gauge-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 10;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 188.5;
+  stroke-dashoffset: 100.9;
+  transition: stroke-dashoffset 0.5s;
+}
+
+.gauge-value {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.gauge-value small {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.usage-label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 0.75rem;
+}
+
+.btn-upgrade {
+  width: 100%;
+  padding: 0.55rem;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-upgrade:hover {
+  background: rgba(124, 93, 250, 0.15);
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.quick-actions button {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  text-align: left;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.quick-actions button:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border-color: var(--card-border);
+}
+
+.quick-actions .qa-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(124, 93, 250, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ——— Toast ——— */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  padding: 0.75rem 1.1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: toastIn 0.3s ease;
+  max-width: 320px;
+}
+
+.toast.demo {
+  border-left: 3px solid var(--accent);
+}
+
+.toast.success {
+  border-left: 3px solid var(--success);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ——— Responsive ——— */
+@media (max-width: 1279px) {
+  .app-body {
+    grid-template-columns: var(--sidebar-left) 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .info-sidebar {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .info-sidebar .info-block {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 767px) {
+  .nav-links {
+    display: none;
+  }
+
+  .btn-auth-ghost {
+    display: none;
+  }
+
+  .btn-auth-primary {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.75rem;
+  }
+
+  .app-body {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .config-toggle {
+    display: block;
+    grid-column: 1;
+  }
+
+  .config-sidebar {
+    grid-column: 1;
+  }
+
+  .config-sidebar .config-panel {
+    display: none;
+  }
+
+  .config-sidebar:not(.collapsed) .config-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .main-workspace {
+    grid-column: 1;
+  }
+
+  .info-sidebar {
+    flex-direction: column;
+  }
+
+  .options-list {
+    padding-left: 0;
+  }
+
+  .result-actions {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .config-sidebar .config-panel {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Focus accessibility */
+button:focus-visible,
+a:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+</style>
+</head>
+<body>
+  <header class="top-nav">
+    <a href="#" class="logo">Quiz<span>AI</span></a>
+    <nav class="nav-links">
+      <a href="#" data-i18n="nav.dashboard">Dashboard</a>
+      <a href="#" class="active" data-i18n="nav.generation">Generation</a>
+      <a href="#" data-i18n="nav.history">History</a>
+      <a href="#" data-i18n="nav.favorites">Favorites</a>
+    </nav>
+    <div class="nav-right">
+      <div class="lang-switch" role="group" aria-label="Interface language">
+        <button type="button" data-ui-lang="ru" class="active">RU</button>
+        <button type="button" data-ui-lang="kz">KZ</button>
+        <button type="button" data-ui-lang="en">EN</button>
+      </div>
+      <div class="auth-nav" id="authNav">
+        <button type="button" class="btn-auth-ghost" id="btnLogin" data-i18n="auth.login">Войти</button>
+        <button type="button" class="btn-auth-primary" id="btnRegister" data-i18n="auth.register">Регистрация</button>
+      </div>
+      <div class="user-menu hidden" id="userMenu">
+        <button type="button" class="avatar" id="avatarBtn" aria-haspopup="true" aria-expanded="false">
+          <span id="avatarInitials">?</span>
+        </button>
+        <div class="user-dropdown glass hidden" id="userDropdown">
+          <p class="user-dropdown-name" id="userDisplayName">User</p>
+          <p class="user-dropdown-email" id="userDisplayEmail">user@email.com</p>
+          <button type="button" id="btnLogout" data-i18n="auth.logout">Выйти</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <button type="button" class="config-toggle" id="configToggle" data-i18n="config.toggle">
+      ⚙ Test settings
+    </button>
+
+    <aside class="config-sidebar collapsed" id="configSidebar">
+      <div class="config-panel">
+        <div>
+          <p class="section-label" data-i18n="config.label">AI Generation</p>
+          <h2 class="section-title" data-i18n="config.title">Create test</h2>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.questionType">Question type</h3>
+          <div class="type-cards" id="typeCards">
+            <button type="button" class="type-card active" data-type="mcq">
+              <span class="icon">☑</span>
+              <span>
+                <span class="label" data-i18n="type.mcq">MCQ</span>
+                <span class="desc" data-i18n="type.mcqDesc">Multiple choice</span>
+              </span>
+            </button>
+            <button type="button" class="type-card" data-type="open">
+              <span class="icon">✎</span>
+              <span>
+                <span class="label" data-i18n="type.open">Open-ended</span>
+                <span class="desc" data-i18n="type.openDesc">Free text answer</span>
+              </span>
+            </button>
+            <button type="button" class="type-card" data-type="quiz">
+              <span class="icon">?</span>
+              <span>
+                <span class="label" data-i18n="type.quiz">Quiz</span>
+                <span class="desc" data-i18n="type.quizDesc">Mixed format</span>
+              </span>
+            </button>
+            <button type="button" class="type-card" data-type="tf">
+              <span class="icon">✓</span>
+              <span>
+                <span class="label" data-i18n="type.tf">True/False</span>
+                <span class="desc" data-i18n="type.tfDesc">Binary choice</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.difficulty">Difficulty</h3>
+          <div class="segmented" id="difficultyControl">
+            <button type="button" data-difficulty="easy" data-i18n="diff.easy">Easy</button>
+            <button type="button" class="active" data-difficulty="medium" data-i18n="diff.medium">Medium</button>
+            <button type="button" data-difficulty="hard" data-i18n="diff.hard">Hard</button>
+          </div>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.count">Number of questions</h3>
+          <div class="count-pills" id="countPills">
+            <button type="button" data-count="5">5</button>
+            <button type="button" class="active" data-count="10">10</button>
+            <button type="button" data-count="15">15</button>
+            <button type="button" data-count="20">20</button>
+          </div>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.testLang">Test language</h3>
+          <div class="lang-list" id="testLangList">
+            <button type="button" class="active" data-test-lang="ru">
+              <span data-i18n="lang.ru">Russian</span>
+              <span class="flag">RU</span>
+            </button>
+            <button type="button" data-test-lang="kz">
+              <span data-i18n="lang.kz">Kazakh</span>
+              <span class="flag">KZ</span>
+            </button>
+            <button type="button" data-test-lang="en">
+              <span data-i18n="lang.en">English</span>
+              <span class="flag">EN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-workspace">
+      <section class="ai-box glass">
+        <p class="section-label" data-i18n="ai.label">AI Assistant</p>
+        <textarea
+          id="sourceText"
+          maxlength="5000"
+          placeholder=""
+          data-i18n-placeholder="ai.placeholder"
+        ></textarea>
+        <div class="ai-toolbar">
+          <button type="button" class="toolbar-btn" data-demo="pdf">📄 <span data-i18n="ai.importPdf">Import PDF</span></button>
+          <button type="button" class="toolbar-btn" data-demo="upload">📎 <span data-i18n="ai.upload">Upload document</span></button>
+          <button type="button" class="toolbar-btn" data-demo="url">🔗 <span data-i18n="ai.url">Insert URL</span></button>
+          <span class="char-counter" id="charCounter">0 / 5000</span>
+        </div>
+        <button type="button" class="btn-generate" id="btnGenerate" disabled>
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-text">✨ <span data-i18n="ai.generate">Generate questions</span></span>
+        </button>
+      </section>
+
+      <div class="stats-bar glass" id="statsBar">
+        <span><span data-i18n="stats.time">Time</span>: <strong id="statTime">—</strong></span>
+        <span><span data-i18n="stats.tokens">Tokens</span>: <strong id="statTokens">—</strong></span>
+        <span><span data-i18n="stats.accuracy">Accuracy</span>: <strong id="statAccuracy">—</strong></span>
+        <span><span data-i18n="stats.model">Model</span>: <strong>GPT-4o</strong></span>
+      </div>
+
+      <section class="results-section glass">
+        <div class="results-header">
+          <div class="view-tabs" id="viewTabs">
+            <button type="button" class="active" data-view="list" data-i18n="view.list">List</button>
+            <button type="button" data-view="cards" data-i18n="view.cards">Cards</button>
+            <button type="button" data-view="preview" data-i18n="view.preview">Preview</button>
+          </div>
+          <div class="result-actions">
+            <button type="button" id="btnFilter" data-i18n="action.filter">Filter</button>
+            <button type="button" id="btnShuffle" data-i18n="action.shuffle">Shuffle</button>
+            <button type="button" data-demo="qr" data-i18n="action.qr">QR-test</button>
+            <button type="button" data-demo="pdf-export" data-i18n="action.pdf">PDF</button>
+            <button type="button" id="btnSave" data-i18n="action.save">Save</button>
+            <button type="button" id="btnRefresh" data-i18n="action.refresh">Refresh</button>
+          </div>
+        </div>
+
+        <div class="questions-container" id="questionsContainer">
+          <div class="empty-state" id="emptyState">
+            <div class="icon-large">📝</div>
+            <p data-i18n="empty.message">Enter source text and click Generate questions</p>
+          </div>
+        </div>
+
+        <div class="preview-nav" id="previewNav">
+          <button type="button" id="previewPrev" data-i18n="preview.prev">← Previous</button>
+          <span id="previewIndicator">1 / 1</span>
+          <button type="button" id="previewNext" data-i18n="preview.next">Next →</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="info-sidebar">
+      <div class="info-block glass">
+        <h3 data-i18n="recent.title">Recent tests</h3>
+        <ul class="recent-list">
+          <li>
+            <span class="name" data-i18n="recent.bio">Biology 9th grade</span>
+            <span class="time">2h ago</span>
+          </li>
+          <li>
+            <span class="name" data-i18n="recent.history">History of Kazakhstan</span>
+            <span class="time">Yesterday</span>
+          </li>
+          <li>
+            <span class="name" data-i18n="recent.math">Algebra basics</span>
+            <span class="time">3 days ago</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="info-block glass usage-widget">
+        <h3 data-i18n="usage.title">Monthly usage</h3>
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="gauge-bg" cx="60" cy="60" r="50" />
+            <circle class="gauge-fill" id="gaugeFill" cx="60" cy="60" r="50" />
+          </svg>
+          <div class="gauge-value"><span id="gaugeUsed">47</span> <small>/ 100</small></div>
+        </div>
+        <p class="usage-label" data-i18n="usage.label">generations this month</p>
+        <button type="button" class="btn-upgrade" data-demo="upgrade" data-i18n="usage.upgrade">Upgrade plan</button>
+      </div>
+
+      <div class="info-block glass">
+        <h3 data-i18n="quick.title">Quick actions</h3>
+        <div class="quick-actions">
+          <button type="button" id="quickNew" data-demo="new">
+            <span class="qa-icon">+</span>
+            <span data-i18n="quick.new">New test</span>
+          </button>
+          <button type="button" data-demo="favorites">
+            <span class="qa-icon">★</span>
+            <span data-i18n="quick.favorites">Favorites</span>
+          </button>
+          <button type="button" data-demo="share">
+            <span class="qa-icon">↗</span>
+            <span data-i18n="quick.share">Share</span>
+          </button>
+          <button type="button" data-demo="settings">
+            <span class="qa-icon">⚙</span>
+            <span data-i18n="quick.settings">Settings</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <div class="modal-overlay hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <div class="modal glass auth-modal">
+      <button type="button" class="modal-close" id="authModalClose" aria-label="Close">×</button>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-tab="register" data-i18n="auth.tabRegister">Регистрация</button>
+        <button type="button" class="auth-tab" data-auth-tab="login" data-i18n="auth.tabLogin">Вход</button>
+      </div>
+
+      <h2 class="auth-modal-title" id="authModalTitle" data-i18n="auth.registerTitle">Создать аккаунт</h2>
+      <p class="auth-modal-sub" data-i18n="auth.registerSub">Сохраняйте тесты и отслеживайте лимиты</p>
+
+      <form class="auth-form" id="registerForm" novalidate>
+        <label>
+          <span data-i18n="auth.name">Имя</span>
+          <input type="text" id="regName" name="name" autocomplete="name" required />
+        </label>
+        <label>
+          <span data-i18n="auth.email">Email</span>
+          <input type="email" id="regEmail" name="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span data-i18n="auth.password">Пароль</span>
+          <input type="password" id="regPassword" name="password" autocomplete="new-password" minlength="6" required />
+        </label>
+        <label>
+          <span data-i18n="auth.passwordConfirm">Подтвердите пароль</span>
+          <input type="password" id="regPasswordConfirm" name="passwordConfirm" autocomplete="new-password" required />
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="regAgree" required />
+          <span data-i18n="auth.agree">Я согласен с условиями использования</span>
+        </label>
+        <p class="form-error hidden" id="registerError"></p>
+        <button type="submit" class="btn-auth-submit" data-i18n="auth.submitRegister">Зарегистрироваться</button>
+      </form>
+
+      <form class="auth-form hidden" id="loginForm" novalidate>
+        <label>
+          <span data-i18n="auth.email">Email</span>
+          <input type="email" id="loginEmail" name="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span data-i18n="auth.password">Пароль</span>
+          <input type="password" id="loginPassword" name="password" autocomplete="current-password" required />
+        </label>
+        <p class="form-error hidden" id="loginError"></p>
+        <button type="submit" class="btn-auth-submit" data-i18n="auth.submitLogin">Войти</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  const USERS_KEY = "quizai-users";
+  const SESSION_KEY = "quizai-session";
+  const UI_LANG_KEY = "quizai-ui-lang";
+
+  const i18n = {
+    ru: {
+      "auth.login": "Войти",
+      "auth.register": "Регистрация",
+      "auth.logout": "Выйти",
+      "auth.tabRegister": "Регистрация",
+      "auth.tabLogin": "Вход",
+      "auth.registerTitle": "Создать аккаунт",
+      "auth.loginTitle": "Войти в аккаунт",
+      "auth.registerSub": "Сохраняйте тесты и отслеживайте лимиты",
+      "auth.loginSub": "Продолжите работу с вашими тестами",
+      "auth.name": "Имя",
+      "auth.email": "Email",
+      "auth.password": "Пароль",
+      "auth.passwordConfirm": "Подтвердите пароль",
+      "auth.agree": "Я согласен с условиями использования",
+      "auth.submitRegister": "Зарегистрироваться",
+      "auth.submitLogin": "Войти",
+      "auth.err.name": "Введите имя (минимум 2 символа)",
+      "auth.err.email": "Введите корректный email",
+      "auth.err.password": "Пароль минимум 6 символов",
+      "auth.err.confirm": "Пароли не совпадают",
+      "auth.err.agree": "Примите условия использования",
+      "auth.err.exists": "Пользователь с таким email уже зарегистрирован",
+      "auth.err.invalid": "Неверный email или пароль",
+      "auth.success.register": "Регистрация успешна! Добро пожаловать",
+      "auth.success.login": "Вы вошли в аккаунт",
+      "auth.success.logout": "Вы вышли из аккаунта",
+      "auth.needLogin": "Войдите или зарегистрируйтесь для генерации",
+    },
+    kz: {
+      "auth.login": "Кіру",
+      "auth.register": "Тіркелу",
+      "auth.logout": "Шығу",
+      "auth.tabRegister": "Тіркелу",
+      "auth.tabLogin": "Кіру",
+      "auth.registerTitle": "Аккаунт жасау",
+      "auth.loginTitle": "Аккаунтқа кіру",
+      "auth.registerSub": "Тесттерді сақтаңыз және лимиттерді бақылаңыз",
+      "auth.loginSub": "Тесттеріңізбен жұмысты жалғастырыңыз",
+      "auth.name": "Аты",
+      "auth.email": "Email",
+      "auth.password": "Құпия сөз",
+      "auth.passwordConfirm": "Құпия сөзді растаңыз",
+      "auth.agree": "Пайдалану шарттарымен келісемін",
+      "auth.submitRegister": "Тіркелу",
+      "auth.submitLogin": "Кіру",
+      "auth.err.name": "Атыңызды енгізіңіз (кемінде 2 таңба)",
+      "auth.err.email": "Дұрыс email енгізіңіз",
+      "auth.err.password": "Құпия сөз кемінде 6 таңба",
+      "auth.err.confirm": "Құпия сөздер сәйкес емес",
+      "auth.err.agree": "Пайдалану шарттарын қабылдаңыз",
+      "auth.err.exists": "Бұл email тіркелген",
+      "auth.err.invalid": "Email немесе құпия сөз қате",
+      "auth.success.register": "Тіркелу сәтті! Қош келдіңіз",
+      "auth.success.login": "Сіз кірдіңіз",
+      "auth.success.logout": "Сіз шықтыңыз",
+      "auth.needLogin": "Генерация үшін кіріңіз немесе тіркеліңіз",
+    },
+    en: {
+      "auth.login": "Log in",
+      "auth.register": "Sign up",
+      "auth.logout": "Log out",
+      "auth.tabRegister": "Sign up",
+      "auth.tabLogin": "Log in",
+      "auth.registerTitle": "Create account",
+      "auth.loginTitle": "Log in to your account",
+      "auth.registerSub": "Save tests and track your usage limits",
+      "auth.loginSub": "Continue working with your tests",
+      "auth.name": "Name",
+      "auth.email": "Email",
+      "auth.password": "Password",
+      "auth.passwordConfirm": "Confirm password",
+      "auth.agree": "I agree to the terms of use",
+      "auth.submitRegister": "Sign up",
+      "auth.submitLogin": "Log in",
+      "auth.err.name": "Enter a name (at least 2 characters)",
+      "auth.err.email": "Enter a valid email",
+      "auth.err.password": "Password must be at least 6 characters",
+      "auth.err.confirm": "Passwords do not match",
+      "auth.err.agree": "Please accept the terms of use",
+      "auth.err.exists": "An account with this email already exists",
+      "auth.err.invalid": "Invalid email or password",
+      "auth.success.register": "Registration successful! Welcome",
+      "auth.success.login": "You are logged in",
+      "auth.success.logout": "You have logged out",
+      "auth.needLogin": "Log in or sign up to generate questions",
+    },
+  };
+
+  let uiLang = localStorage.getItem(UI_LANG_KEY) || "ru";
+
+  const $ = (sel) => document.querySelector(sel);
+  const $ = (sel) => document.querySelectorAll(sel);
+
+  function t(key) {
+    const pack = i18n[uiLang] || i18n.ru;
+    return pack[key] || i18n.ru[key] || key;
+  }
+
+  function applyI18n() {
+    $("#authModal [data-i18n], #authNav [data-i18n], #userMenu [data-i18n]").forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (key) el.textContent = t(key);
+    });
+    updateModalTitles();
+  }
+
+  function updateModalTitles() {
+    const tab = $(".auth-tab.active")?.dataset.authTab || "register";
+    const title = $("#authModalTitle");
+    const sub = $(".auth-modal-sub");
+    if (tab === "login") {
+      title.textContent = t("auth.loginTitle");
+      if (sub) sub.textContent = t("auth.loginSub");
+    } else {
+      title.textContent = t("auth.registerTitle");
+      if (sub) sub.textContent = t("auth.registerSub");
+    }
+  }
+
+  async function hashPassword(password) {
+    const data = new TextEncoder().encode(password);
+    const hash = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hash))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  function getUsers() {
+    try {
+      return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+
+  function getSession() {
+    try {
+      return JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+    } catch {
+      return null;
+    }
+  }
+
+  function setSession(user) {
+    const session = {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    return session;
+  }
+
+  function clearSession() {
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function getInitials(name) {
+    return name
+      .trim()
+      .split(/\s+/)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "?";
+  }
+
+  function showToast(message, type = "success") {
+    if (window.QuizAI?.showToast) {
+      window.QuizAI.showToast(message, type);
+      return;
+    }
+    alert(message);
+  }
+
+  function updateNav() {
+    const session = getSession();
+    const authNav = $("#authNav");
+    const userMenu = $("#userMenu");
+
+    if (session) {
+      authNav.classList.add("hidden");
+      userMenu.classList.remove("hidden");
+      $("#avatarInitials").textContent = getInitials(session.name);
+      $("#userDisplayName").textContent = session.name;
+      $("#userDisplayEmail").textContent = session.email;
+    } else {
+      authNav.classList.remove("hidden");
+      userMenu.classList.add("hidden");
+      $("#userDropdown").classList.add("hidden");
+    }
+  }
+
+  function openModal(tab = "register") {
+    switchTab(tab);
+    $("#authModal").classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    $("#authModal").classList.add("hidden");
+    document.body.style.overflow = "";
+    clearFormErrors();
+    $("#registerForm").reset();
+    $("#loginForm").reset();
+  }
+
+  function switchTab(tab) {
+    $(".auth-tab").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.authTab === tab);
+    });
+    $("#registerForm").classList.toggle("hidden", tab !== "register");
+    $("#loginForm").classList.toggle("hidden", tab !== "login");
+    updateModalTitles();
+    clearFormErrors();
+  }
+
+  function showFormError(formId, message) {
+    const errEl = formId === "register" ? $("#registerError") : $("#loginError");
+    errEl.textContent = message;
+    errEl.classList.remove("hidden");
+  }
+
+  function clearFormErrors() {
+    $("#registerError").classList.add("hidden");
+    $("#loginError").classList.add("hidden");
+    $(".auth-form input").forEach((inp) => inp.classList.remove("invalid"));
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    clearFormErrors();
+
+    const name = $("#regName").value.trim();
+    const email = $("#regEmail").value.trim().toLowerCase();
+    const password = $("#regPassword").value;
+    const confirm = $("#regPasswordConfirm").value;
+    const agree = $("#regAgree").checked;
+
+    if (name.length < 2) {
+      $("#regName").classList.add("invalid");
+      showFormError("register", t("auth.err.name"));
+      return;
+    }
+    if (!isValidEmail(email)) {
+      $("#regEmail").classList.add("invalid");
+      showFormError("register", t("auth.err.email"));
+      return;
+    }
+    if (password.length < 6) {
+      $("#regPassword").classList.add("invalid");
+      showFormError("register", t("auth.err.password"));
+      return;
+    }
+    if (password !== confirm) {
+      $("#regPasswordConfirm").classList.add("invalid");
+      showFormError("register", t("auth.err.confirm"));
+      return;
+    }
+    if (!agree) {
+      showFormError("register", t("auth.err.agree"));
+      return;
+    }
+
+    const users = getUsers();
+    if (users.some((u) => u.email === email)) {
+      $("#regEmail").classList.add("invalid");
+      showFormError("register", t("auth.err.exists"));
+      return;
+    }
+
+    const submitBtn = $("#registerForm button[type=submit]");
+    submitBtn.disabled = true;
+
+    try {
+      const passwordHash = await hashPassword(password);
+      const user = {
+        id: crypto.randomUUID(),
+        name,
+        email,
+        passwordHash,
+        createdAt: new Date().toISOString(),
+      };
+      users.push(user);
+      saveUsers(users);
+      setSession(user);
+      updateNav();
+      closeModal();
+      showToast(t("auth.success.register"), "success");
+      window.dispatchEvent(new CustomEvent("quizai-auth", { detail: { loggedIn: true } }));
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    clearFormErrors();
+
+    const email = $("#loginEmail").value.trim().toLowerCase();
+    const password = $("#loginPassword").value;
+
+    if (!isValidEmail(email)) {
+      $("#loginEmail").classList.add("invalid");
+      showFormError("login", t("auth.err.email"));
+      return;
+    }
+
+    const users = getUsers();
+    const user = users.find((u) => u.email === email);
+
+    const submitBtn = $("#loginForm button[type=submit]");
+    submitBtn.disabled = true;
+
+    try {
+      const passwordHash = await hashPassword(password);
+      if (!user || user.passwordHash !== passwordHash) {
+        showFormError("login", t("auth.err.invalid"));
+        return;
+      }
+      setSession(user);
+      updateNav();
+      closeModal();
+      showToast(t("auth.success.login"), "success");
+      window.dispatchEvent(new CustomEvent("quizai-auth", { detail: { loggedIn: true } }));
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  function handleLogout() {
+    clearSession();
+    updateNav();
+    $("#userDropdown").classList.add("hidden");
+    showToast(t("auth.success.logout"), "success");
+    window.dispatchEvent(new CustomEvent("quizai-auth", { detail: { loggedIn: false } }));
+  }
+
+  function bindEvents() {
+    $("#btnRegister").addEventListener("click", () => openModal("register"));
+    $("#btnLogin").addEventListener("click", () => openModal("login"));
+    $("#authModalClose").addEventListener("click", closeModal);
+    $("#authModal").addEventListener("click", (e) => {
+      if (e.target === $("#authModal")) closeModal();
+    });
+
+    $(".auth-tab").forEach((tab) => {
+      tab.addEventListener("click", () => switchTab(tab.dataset.authTab));
+    });
+
+    $("#registerForm").addEventListener("submit", handleRegister);
+    $("#loginForm").addEventListener("submit", handleLogin);
+    $("#btnLogout").addEventListener("click", handleLogout);
+
+    $("#avatarBtn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const dd = $("#userDropdown");
+      const open = dd.classList.toggle("hidden");
+      $("#avatarBtn").setAttribute("aria-expanded", String(!open));
+    });
+
+    document.addEventListener("click", () => {
+      $("#userDropdown").classList.add("hidden");
+      $("#avatarBtn").setAttribute("aria-expanded", "false");
+    });
+
+    $("#userDropdown").addEventListener("click", (e) => e.stopPropagation());
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    window.addEventListener("quizai-lang", (e) => {
+      uiLang = e.detail || "ru";
+      localStorage.setItem(UI_LANG_KEY, uiLang);
+      applyI18n();
+    });
+  }
+
+  function init() {
+    applyI18n();
+    updateNav();
+    bindEvents();
+
+    window.QuizAIAuth = {
+      isLoggedIn: () => !!getSession(),
+      getSession,
+      openRegister: () => openModal("register"),
+      openLogin: () => openModal("login"),
+      requireAuth: () => {
+        if (getSession()) return true;
+        showToast(t("auth.needLogin"), "demo");
+        openModal("register");
+        return false;
+      },
+      t,
+    };
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+  <script>
+(function () {
+  "use strict";
+
+  const MAX_CHARS = 5000;
+  const GENERATE_DELAY_MS = 1400;
+
+  const DEFAULT_SOURCE = {
+    ru: "Фотосинтез — это процесс, при котором растения используют солнечный свет, воду и углекислый газ для производства глюкозы и кислорода. Процесс происходит в хлоропластах и включает световую и темновую фазы. Световая фаза происходит в тилакоидах, а темновая — в строме хлоропласта.",
+    kz: "Фотосинтез — бұл өсімдіктердің күн сәулесін, суды және көмірқышқыл газын пайдаланып глюкоза мен оттегін өндіру процесі. Процесс хлоропласттарда жүреді және жарық пен қараңғы фазаларды қамтиды.",
+    en: "Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to produce glucose and oxygen. It occurs in chloroplasts and includes light-dependent and light-independent reactions.",
+  };
+
+  const i18n = {
+    ru: {
+      "nav.dashboard": "Dashboard",
+      "nav.generation": "Generation",
+      "nav.history": "History",
+      "nav.favorites": "Favorites",
+      "config.toggle": "⚙ Настройки теста",
+      "config.label": "AI Generation",
+      "config.title": "Создать тест",
+      "config.questionType": "Тип вопроса",
+      "config.difficulty": "Сложность",
+      "config.count": "Количество вопросов",
+      "config.testLang": "Язык теста",
+      "type.mcq": "MCQ",
+      "type.mcqDesc": "Множественный выбор",
+      "type.open": "Открытый",
+      "type.openDesc": "Свободный ответ",
+      "type.quiz": "Quiz",
+      "type.quizDesc": "Смешанный формат",
+      "type.tf": "True/False",
+      "type.tfDesc": "Да / Нет",
+      "diff.easy": "Лёгкий",
+      "diff.medium": "Средний",
+      "diff.hard": "Сложный",
+      "lang.ru": "Русский",
+      "lang.kz": "Казахский",
+      "lang.en": "Английский",
+      "ai.label": "AI Assistant",
+      "ai.placeholder": "Вставьте текст лекции, статьи или конспекта…",
+      "ai.importPdf": "Import PDF",
+      "ai.upload": "Upload document",
+      "ai.url": "Insert URL",
+      "ai.generate": "Generate questions",
+      "stats.time": "Time",
+      "stats.tokens": "Tokens",
+      "stats.accuracy": "Accuracy",
+      "stats.model": "Model",
+      "view.list": "List",
+      "view.cards": "Cards",
+      "view.preview": "Preview",
+      "action.filter": "Filter",
+      "action.shuffle": "Shuffle",
+      "action.qr": "QR-test",
+      "action.pdf": "PDF",
+      "action.save": "Save",
+      "action.refresh": "Refresh",
+      "empty.message": "Введите текст и нажмите Generate questions",
+      "preview.prev": "← Назад",
+      "preview.next": "Вперёд →",
+      "recent.title": "Недавние тесты",
+      "recent.bio": "Биология 9 класс",
+      "recent.history": "История Казахстана",
+      "recent.math": "Основы алгебры",
+      "usage.title": "Использование",
+      "usage.label": "генераций в этом месяце",
+      "usage.upgrade": "Upgrade plan",
+      "quick.title": "Быстрые действия",
+      "quick.new": "Новый тест",
+      "quick.favorites": "Избранное",
+      "quick.share": "Поделиться",
+      "quick.settings": "Настройки",
+      "toast.demo": "Демо-режим: функция недоступна",
+      "toast.saved": "Тест сохранён локально",
+      "toast.refreshed": "Список обновлён",
+      "toast.shuffled": "Вопросы перемешаны",
+      "toast.filter": "Фильтр: показаны все вопросы",
+      "toast.generated": "Сгенерировано вопросов: ",
+      "toast.cleared": "Новый тест — поле очищено",
+      "edit.prompt": "Редактировать вопрос:",
+      "auth.login": "Войти",
+      "auth.register": "Регистрация",
+    },
+    kz: {
+      "nav.dashboard": "Басты бет",
+      "nav.generation": "Генерация",
+      "nav.history": "Тарих",
+      "nav.favorites": "Таңдаулылар",
+      "config.toggle": "⚙ Тест баптаулары",
+      "config.label": "AI Generation",
+      "config.title": "Тест жасау",
+      "config.questionType": "Сұрақ түрі",
+      "config.difficulty": "Қиындығы",
+      "config.count": "Сұрақ саны",
+      "config.testLang": "Тест тілі",
+      "type.mcq": "MCQ",
+      "type.mcqDesc": "Көп таңдау",
+      "type.open": "Ашық",
+      "type.openDesc": "Еркін жауап",
+      "type.quiz": "Quiz",
+      "type.quizDesc": "Аралас формат",
+      "type.tf": "True/False",
+      "type.tfDesc": "Иә / Жоқ",
+      "diff.easy": "Оңай",
+      "diff.medium": "Орташа",
+      "diff.hard": "Қиын",
+      "lang.ru": "Орысша",
+      "lang.kz": "Қазақша",
+      "lang.en": "Ағылшынша",
+      "ai.label": "AI Assistant",
+      "ai.placeholder": "Дәріс мәтінін, мақаланы немесе конспектті қойыңыз…",
+      "ai.importPdf": "PDF импорт",
+      "ai.upload": "Құжат жүктеу",
+      "ai.url": "URL енгізу",
+      "ai.generate": "Сұрақтарды генерациялау",
+      "stats.time": "Уақыт",
+      "stats.tokens": "Токендер",
+      "stats.accuracy": "Дәлдік",
+      "stats.model": "Модель",
+      "view.list": "Тізім",
+      "view.cards": "Карталар",
+      "view.preview": "Алдын ала",
+      "action.filter": "Сүзгі",
+      "action.shuffle": "Араластыру",
+      "action.qr": "QR-тест",
+      "action.pdf": "PDF",
+      "action.save": "Сақтау",
+      "action.refresh": "Жаңарту",
+      "empty.message": "Мәтін енгізіп, Generate батырмасын басыңыз",
+      "preview.prev": "← Алдыңғы",
+      "preview.next": "Келесі →",
+      "recent.title": "Соңғы тесттер",
+      "recent.bio": "Биология 9 сынып",
+      "recent.history": "Қазақстан тарихы",
+      "recent.math": "Алгебра негіздері",
+      "usage.title": "Пайдалану",
+      "usage.label": "айдағы генерациялар",
+      "usage.upgrade": "Жоспарды жаңарту",
+      "quick.title": "Жылдам әрекеттер",
+      "quick.new": "Жаңа тест",
+      "quick.favorites": "Таңдаулылар",
+      "quick.share": "Бөлісу",
+      "quick.settings": "Баптаулар",
+      "toast.demo": "Демо: функция қолжетімсіз",
+      "toast.saved": "Тест жергілікті сақталды",
+      "toast.refreshed": "Тізім жаңартылды",
+      "toast.shuffled": "Сұрақтар араластырылды",
+      "toast.filter": "Сүзгі: барлық сұрақтар көрсетілді",
+      "toast.generated": "Генерацияланған сұрақтар: ",
+      "toast.cleared": "Жаңа тест — өріс тазартылды",
+      "edit.prompt": "Сұрақты өңдеу:",
+      "auth.login": "Кіру",
+      "auth.register": "Тіркелу",
+    },
+    en: {
+      "nav.dashboard": "Dashboard",
+      "nav.generation": "Generation",
+      "nav.history": "History",
+      "nav.favorites": "Favorites",
+      "config.toggle": "⚙ Test settings",
+      "config.label": "AI Generation",
+      "config.title": "Create test",
+      "config.questionType": "Question type",
+      "config.difficulty": "Difficulty",
+      "config.count": "Number of questions",
+      "config.testLang": "Test language",
+      "type.mcq": "MCQ",
+      "type.mcqDesc": "Multiple choice",
+      "type.open": "Open-ended",
+      "type.openDesc": "Free text answer",
+      "type.quiz": "Quiz",
+      "type.quizDesc": "Mixed format",
+      "type.tf": "True/False",
+      "type.tfDesc": "Binary choice",
+      "diff.easy": "Easy",
+      "diff.medium": "Medium",
+      "diff.hard": "Hard",
+      "lang.ru": "Russian",
+      "lang.kz": "Kazakh",
+      "lang.en": "English",
+      "ai.label": "AI Assistant",
+      "ai.placeholder": "Paste lecture text, article, or notes…",
+      "ai.importPdf": "Import PDF",
+      "ai.upload": "Upload document",
+      "ai.url": "Insert URL",
+      "ai.generate": "Generate questions",
+      "stats.time": "Time",
+      "stats.tokens": "Tokens",
+      "stats.accuracy": "Accuracy",
+      "stats.model": "Model",
+      "view.list": "List",
+      "view.cards": "Cards",
+      "view.preview": "Preview",
+      "action.filter": "Filter",
+      "action.shuffle": "Shuffle",
+      "action.qr": "QR-test",
+      "action.pdf": "PDF",
+      "action.save": "Save",
+      "action.refresh": "Refresh",
+      "empty.message": "Enter source text and click Generate questions",
+      "preview.prev": "← Previous",
+      "preview.next": "Next →",
+      "recent.title": "Recent tests",
+      "recent.bio": "Biology 9th grade",
+      "recent.history": "History of Kazakhstan",
+      "recent.math": "Algebra basics",
+      "usage.title": "Monthly usage",
+      "usage.label": "generations this month",
+      "usage.upgrade": "Upgrade plan",
+      "quick.title": "Quick actions",
+      "quick.new": "New test",
+      "quick.favorites": "Favorites",
+      "quick.share": "Share",
+      "quick.settings": "Settings",
+      "toast.demo": "Demo mode: feature not available",
+      "toast.saved": "Test saved locally",
+      "toast.refreshed": "List refreshed",
+      "toast.shuffled": "Questions shuffled",
+      "toast.filter": "Filter: showing all questions",
+      "toast.generated": "Generated questions: ",
+      "toast.cleared": "New test — field cleared",
+      "edit.prompt": "Edit question:",
+      "auth.login": "Log in",
+      "auth.register": "Sign up",
+    },
+  };
+
+  const mockQuestions = {
+    ru: {
+      easy: [
+        {
+          q: "Где происходит фотосинтез у растений?",
+          options: ["В митохондриях", "В хлоропластах", "В ядре", "В вакуоли"],
+          correct: 1,
+        },
+        {
+          q: "Какой газ поглощается растениями при фотосинтезе?",
+          options: ["Кислород", "Азот", "Углекислый газ", "Водород"],
+          correct: 2,
+        },
+        {
+          q: "Что выделяется как побочный продукт фотосинтеза?",
+          options: ["CO₂", "O₂", "N₂", "CH₄"],
+          correct: 1,
+        },
+        {
+          q: "Какой органеллой называют «зелёная фабрика» клетки?",
+          options: ["Рибосома", "Хлоропласт", "Лизосома", "Аппарат Гольджи"],
+          correct: 1,
+        },
+        {
+          q: "Какой пигмент поглощает свет в хлоропластах?",
+          options: ["Каротин", "Хлорофилл", "Антоциан", "Меланин"],
+          correct: 1,
+        },
+        {
+          q: "Из чего в основном состоит глюкоза, образующаяся при фотосинтезе?",
+          options: ["Белки", "Углеводы", "Жиры", "Нуклеиновые кислоты"],
+          correct: 1,
+        },
+        {
+          q: "Какой источник энергии нужен для световой фазы?",
+          options: ["Тепло", "Свет", "Звук", "Механика"],
+          correct: 1,
+        },
+        {
+          q: "Вода для фотосинтеза поступает через:",
+          options: ["Корни", "Листья", "Цветки", "Плоды"],
+          correct: 0,
+        },
+        {
+          q: "Фотосинтез происходит преимущественно в:",
+          options: ["Корнях", "Стебле", "Листьях", "Семенах"],
+          correct: 2,
+        },
+        {
+          q: "Какой продукт питания образуется при фотосинтезе?",
+          options: ["Глюкоза", "Этанол", "Мочевина", "Глицерин"],
+          correct: 0,
+        },
+      ],
+      medium: [
+        {
+          q: "Какие две основные фазы включает фотосинтез?",
+          options: [
+            "Световая и темновая",
+            "Дыхательная и секреторная",
+            "Митотическая и мейотическая",
+            "Анаболическая и катаболическая",
+          ],
+          correct: 0,
+        },
+        {
+          q: "Где происходит световая фаза фотосинтеза?",
+          options: ["В строме", "В тилакоидах", "В ядре", "В цитоплазме"],
+          correct: 1,
+        },
+        {
+          q: "Где происходит цикл Кальвина (темновая фаза)?",
+          options: ["В тилакоидах", "В строме хлоропласта", "В митохондриях", "В клеточной стенке"],
+          correct: 1,
+        },
+        {
+          q: "Какие вещества образуются в световой фазе для темновой?",
+          options: ["ATP и NADPH", "Только CO₂", "Только O₂", "ДНК и РНК"],
+          correct: 0,
+        },
+        {
+          q: "Какой газ является субстратом в цикле Кальвина?",
+          options: ["O₂", "CO₂", "N₂", "H₂"],
+          correct: 1,
+        },
+        {
+          q: "Что происходит с энергией света в хлоропластах?",
+          options: [
+            "Преобразуется в химическую",
+            "Полностью теряется",
+            "Становится звуком",
+            "Не используется",
+          ],
+          correct: 0,
+        },
+        {
+          q: "Какой процесс связан с расщеплением воды в световой фазе?",
+          options: ["Фотолиз", "Ферментация", "Гликолиз", "Дыхание"],
+          correct: 0,
+        },
+        {
+          q: "Почему листья зелёные?",
+          options: [
+            "Хлорофилл отражает зелёный свет",
+            "Нет пигментов",
+            "Из-за воды",
+            "Из-за крахмала",
+          ],
+          correct: 0,
+        },
+        {
+          q: "Что уменьшается в атмосфере благодаря фотосинтезу?",
+          options: ["CO₂", "O₂", "N₂", "Ar"],
+          correct: 0,
+        },
+        {
+          q: "Какой организм является автотрофом за счёт фотосинтеза?",
+          options: ["Гриб", "Зелёное растение", "Бактерия-паразит", "Вирус"],
+          correct: 1,
+        },
+      ],
+      hard: [
+        {
+          q: "Какой фотосистема первая возбуждается светом в Z-схеме?",
+          options: ["Фотосистема II", "Фотосистема I", "Обе одновременно", "Ни одна"],
+          correct: 0,
+        },
+        {
+          q: "Что переносит электроны от фотосистемы II к фотосистеме I?",
+          options: [
+            "Цепь переноса электронов",
+            "Рибосомы",
+            "Микротрубочки",
+            "Лизосомальный комплекс",
+          ],
+          correct: 0,
+        },
+        {
+          q: "Какой кофермент восстанавливается в световой фазе?",
+          options: ["NADPH", "FADH₂ только", "АТФ синтезатор", "Глюкоза"],
+          correct: 0,
+        },
+        {
+          q: "Сколько молекул CO₂ фиксируется за один оборот цикла Кальвина (классически)?",
+          options: ["1", "3", "6", "12"],
+          correct: 1,
+        },
+        {
+          q: "Какой фермент катализирует фиксацию CO₂ в цикле Кальвина?",
+          options: ["Рубиско", "Амилаза", "Каталаза", "Липаза"],
+          correct: 0,
+        },
+        {
+          q: "Что ограничивает фотосинтез при недостатке света?",
+          options: [
+            "Световая фаза",
+            "Только дыхание",
+            "Только деление",
+            "Только экскреция",
+          ],
+          correct: 0,
+        },
+        {
+          q: "C₄-растения эволюционно адаптированы к:",
+          options: [
+            "Жаркому климату и водному дефициту",
+            "Только холоду",
+            "Только темноте",
+            "Отсутствию CO₂",
+          ],
+          correct: 0,
+        },
+        {
+          q: "Какой продукт цикла Кальвина используется для синтеза сахаров?",
+          options: ["Глицеральдегид-3-фосфат", "Пируват", "Лактат", "Ацетил-КоА"],
+          correct: 0,
+        },
+        {
+          q: "Фотореспирация связана с активностью:",
+          options: ["Рубиско при высоком O₂", "Хлорофилла в темноте", "ДНК-полимеразы", "РНК"],
+          correct: 0,
+        },
+        {
+          q: "Квантовый выход фотосинтеза описывает:",
+          options: [
+            "Эффективность преобразования фотонов",
+            "Скорость роста корней",
+            "Количество митозов",
+            "Объём вакуоли",
+          ],
+          correct: 0,
+        },
+      ],
+    },
+    kz: {
+      easy: [
+        {
+          q: "Фотосинтез өсімдіктерде қайда жүреді?",
+          options: ["Митохондрияда", "Хлоропластта", "Ядрода", "Вакуольде"],
+          correct: 1,
+        },
+        {
+          q: "Фотосинтез кезінде өсімдіктер қай газды сіңіреді?",
+          options: ["Оттек", "Азот", "Көмірқышқыл газ", "Сутек"],
+          correct: 2,
+        },
+        {
+          q: "Фотосинтездің қосалқы өнімі ретінде не бөлінеді?",
+          options: ["CO₂", "O₂", "N₂", "CH₄"],
+          correct: 1,
+        },
+        {
+          q: "Жасыл пигмент қалай аталады?",
+          options: ["Каротин", "Хлорофилл", "Антоциан", "Меланин"],
+          correct: 1,
+        },
+        {
+          q: "Фотосинтезде қандай қуат көзі қажет?",
+          options: ["Жылу", "Жарық", "Дыбыс", "Механика"],
+          correct: 1,
+        },
+        {
+          q: "Глюкоза қандай заттар тобына жатады?",
+          options: ["Ақуыздар", "Көмірсулар", "Майлар", "Нуклеин қышқылдары"],
+          correct: 1,
+        },
+        {
+          q: "Су фотосинтезге негізінен қайдан келеді?",
+          options: ["Тамырдан", "Гүлден", "Жемістен", "Қабықтан"],
+          correct: 0,
+        },
+        {
+          q: "Фотосинтез көбінесе қай органда жүреді?",
+          options: ["Тамыр", "Сабақ", "Жапырақ", "Тұқым"],
+          correct: 2,
+        },
+        {
+          q: "Хлоропласт не деп аталады?",
+          options: ["Қызыл фабрика", "Жасыл фабрика", "Көк фабрика", "Сары фабрика"],
+          correct: 1,
+        },
+        {
+          q: "Фотосинтездің негізгі органикалық өнімі:",
+          options: ["Глюкоза", "Этанол", "Мочевина", "Глицерин"],
+          correct: 0,
+        },
+      ],
+      medium: [
+        {
+          q: "Фотосинтездің екі негізгі фазасы:",
+          options: ["Жарық және қараңғы", "Тыныс және секреция", "Митоз және мейоз", "Анаболизм және катаболизм"],
+          correct: 0,
+        },
+        {
+          q: "Жарық фазасы қайда өтеді?",
+          options: ["Стромада", "Тилакоидта", "Ядрода", "Цитоплазмада"],
+          correct: 1,
+        },
+        {
+          q: "Кальвин циклі қайда жүреді?",
+          options: ["Тилакоидта", "Хлоропласт стромасында", "Митохондрияда", "Қабықта"],
+          correct: 1,
+        },
+        {
+          q: "Жарық фазасында қандай молекулалар түзіледі?",
+          options: ["ATP және NADPH", "Тек CO₂", "Тек O₂", "ДНҚ және РНҚ"],
+          correct: 0,
+        },
+        {
+          q: "Кальвин циклінің субстраты:",
+          options: ["O₂", "CO₂", "N₂", "H₂"],
+          correct: 1,
+        },
+        {
+          q: "Жарық энергиясы хлоропластта неге айналады?",
+          options: ["Химиялық энергияға", "Дыбыска", "Жылуға ғана", "Еш нәрсеге"],
+          correct: 0,
+        },
+        {
+          q: "Судың фотолизі қай фазада болады?",
+          options: ["Жарық", "Қараңғы", "Тыныс", "Бөліну"],
+          correct: 0,
+        },
+        {
+          q: "Жапырақ неге жасыл?",
+          options: ["Хлорофилл жасыл түсті шағылыстырады", "Пигмент жоқ", "Судан", "Крахмалдан"],
+          correct: 0,
+        },
+        {
+          q: "Фотосинтез атмосферадағы қай газды азайтады?",
+          options: ["CO₂", "O₂", "N₂", "Ar"],
+          correct: 0,
+        },
+        {
+          q: "Автотроф өсімдік:",
+          options: ["Зобақ", "Жасыл өсімдік", "Паразит бактерия", "Вирус"],
+          correct: 1,
+        },
+      ],
+      hard: [
+        {
+          q: "Z-схемасында алғашқы қозғалатын фотожүйе:",
+          options: ["Фотожүйе II", "Фотожүйе I", "Екеуі бірдей", "Ешқайсысы"],
+          correct: 0,
+        },
+        {
+          q: "Электрондарды фотожүйе II-ден I-ге тасымалдайды:",
+          options: ["Электрон тасымалдау тізбегі", "Рибосома", "Микротрубочка", "Лизосома"],
+          correct: 0,
+        },
+        {
+          q: "Жарық фазасында қалпына келетін кофермент:",
+          options: ["NADPH", "Тек FADH₂", "Глюкоза", "РНҚ"],
+          correct: 0,
+        },
+        {
+          q: "Кальвин циклінің бір айналымында неше CO₂ фиксалады (классикалық)?",
+          options: ["1", "3", "6", "12"],
+          correct: 1,
+        },
+        {
+          q: "CO₂ фиксациясын катализдейтін фермент:",
+          options: ["Рубиско", "Амилаза", "Каталаза", "Липаза"],
+          correct: 0,
+        },
+        {
+          q: "Жарық жетіспегенде фотосинтезді не шектейді?",
+          options: ["Жарық фазасы", "Тек тыныс", "Тек митоз", "Тек экскреция"],
+          correct: 0,
+        },
+        {
+          q: "C₄-өсімдіктер неге бейімделген?",
+          options: ["Ыстық және су тапшылығы", "Тек суық", "Тек қараңғы", "CO₂ жоқ"],
+          correct: 0,
+        },
+        {
+          q: "Кальвин циклінің өнімі:",
+          options: ["Глицеральдегид-3-фосфат", "Пируват", "Лактат", "Ацетил-КоА"],
+          correct: 0,
+        },
+        {
+          q: "Фотореспирация жоғары O₂ кезінде:",
+          options: ["Рубиско белсенділігі", "Хлорофилл", "ДНҚ-полимераза", "РНҚ"],
+          correct: 0,
+        },
+        {
+          q: "Кванттық өнім сипаттайды:",
+          options: ["Фотондарды тиімді түрлендіру", "Тамыр өсуі", "Митоз саны", "Вакуоль көлемі"],
+          correct: 0,
+        },
+      ],
+    },
+    en: {
+      easy: [
+        {
+          q: "Where does photosynthesis occur in plants?",
+          options: ["Mitochondria", "Chloroplasts", "Nucleus", "Vacuole"],
+          correct: 1,
+        },
+        {
+          q: "Which gas do plants absorb during photosynthesis?",
+          options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
+          correct: 2,
+        },
+        {
+          q: "What is released as a byproduct of photosynthesis?",
+          options: ["CO₂", "O₂", "N₂", "CH₄"],
+          correct: 1,
+        },
+        {
+          q: "Which organelle is called the cell's green factory?",
+          options: ["Ribosome", "Chloroplast", "Lysosome", "Golgi apparatus"],
+          correct: 1,
+        },
+        {
+          q: "Which pigment absorbs light in chloroplasts?",
+          options: ["Carotene", "Chlorophyll", "Anthocyanin", "Melanin"],
+          correct: 1,
+        },
+        {
+          q: "Glucose produced in photosynthesis is mainly a:",
+          options: ["Protein", "Carbohydrate", "Lipid", "Nucleic acid"],
+          correct: 1,
+        },
+        {
+          q: "What energy source is required for the light phase?",
+          options: ["Heat", "Light", "Sound", "Mechanical"],
+          correct: 1,
+        },
+        {
+          q: "Water for photosynthesis mainly enters through:",
+          options: ["Roots", "Leaves", "Flowers", "Fruits"],
+          correct: 0,
+        },
+        {
+          q: "Photosynthesis occurs mainly in:",
+          options: ["Roots", "Stem", "Leaves", "Seeds"],
+          correct: 2,
+        },
+        {
+          q: "The main organic product of photosynthesis is:",
+          options: ["Glucose", "Ethanol", "Urea", "Glycerin"],
+          correct: 0,
+        },
+      ],
+      medium: [
+        {
+          q: "What are the two main phases of photosynthesis?",
+          options: ["Light and dark", "Respiratory and secretory", "Mitotic and meiotic", "Anabolic and catabolic"],
+          correct: 0,
+        },
+        {
+          q: "Where does the light-dependent phase occur?",
+          options: ["Stroma", "Thylakoids", "Nucleus", "Cytoplasm"],
+          correct: 1,
+        },
+        {
+          q: "Where does the Calvin cycle occur?",
+          options: ["Thylakoids", "Chloroplast stroma", "Mitochondria", "Cell wall"],
+          correct: 1,
+        },
+        {
+          q: "What molecules are produced in the light phase for the dark phase?",
+          options: ["ATP and NADPH", "Only CO₂", "Only O₂", "DNA and RNA"],
+          correct: 0,
+        },
+        {
+          q: "Which gas is the substrate in the Calvin cycle?",
+          options: ["O₂", "CO₂", "N₂", "H₂"],
+          correct: 1,
+        },
+        {
+          q: "What happens to light energy in chloroplasts?",
+          options: ["Converted to chemical energy", "Fully lost", "Becomes sound", "Unused"],
+          correct: 0,
+        },
+        {
+          q: "Water splitting in the light phase is called:",
+          options: ["Photolysis", "Fermentation", "Glycolysis", "Respiration"],
+          correct: 0,
+        },
+        {
+          q: "Why are leaves green?",
+          options: ["Chlorophyll reflects green light", "No pigments", "Because of water", "Because of starch"],
+          correct: 0,
+        },
+        {
+          q: "Photosynthesis reduces which gas in the atmosphere?",
+          options: ["CO₂", "O₂", "N₂", "Ar"],
+          correct: 0,
+        },
+        {
+          q: "Which organism is an autotroph due to photosynthesis?",
+          options: ["Fungus", "Green plant", "Parasitic bacterium", "Virus"],
+          correct: 1,
+        },
+      ],
+      hard: [
+        {
+          q: "Which photosystem is excited first in the Z-scheme?",
+          options: ["Photosystem II", "Photosystem I", "Both at once", "Neither"],
+          correct: 0,
+        },
+        {
+          q: "What carries electrons from PSII to PSI?",
+          options: ["Electron transport chain", "Ribosomes", "Microtubules", "Lysosomal complex"],
+          correct: 0,
+        },
+        {
+          q: "Which cofactor is reduced in the light phase?",
+          options: ["NADPH", "Only FADH₂", "Glucose", "RNA"],
+          correct: 0,
+        },
+        {
+          q: "How many CO₂ molecules are fixed per Calvin cycle turn (classic)?",
+          options: ["1", "3", "6", "12"],
+          correct: 1,
+        },
+        {
+          q: "Which enzyme catalyzes CO₂ fixation in the Calvin cycle?",
+          options: ["Rubisco", "Amylase", "Catalase", "Lipase"],
+          correct: 0,
+        },
+        {
+          q: "What limits photosynthesis under low light?",
+          options: ["Light phase", "Only respiration", "Only division", "Only excretion"],
+          correct: 0,
+        },
+        {
+          q: "C₄ plants are adapted to:",
+          options: ["Hot climate and water deficit", "Only cold", "Only darkness", "No CO₂"],
+          correct: 0,
+        },
+        {
+          q: "Which Calvin cycle product is used to build sugars?",
+          options: ["Glyceraldehyde-3-phosphate", "Pyruvate", "Lactate", "Acetyl-CoA"],
+          correct: 0,
+        },
+        {
+          q: "Photorespiration is linked to activity of:",
+          options: ["Rubisco at high O₂", "Chlorophyll in dark", "DNA polymerase", "RNA"],
+          correct: 0,
+        },
+        {
+          q: "Quantum yield of photosynthesis describes:",
+          options: ["Efficiency of photon conversion", "Root growth rate", "Number of mitoses", "Vacuole volume"],
+          correct: 0,
+        },
+      ],
+    },
+  };
+
+  const state = {
+    uiLang: "ru",
+    type: "mcq",
+    difficulty: "medium",
+    count: 10,
+    testLang: "ru",
+    view: "list",
+    questions: [],
+    previewIndex: 0,
+    usageCount: 47,
+  };
+
+  const $ = (sel) => document.querySelector(sel);
+  const $ = (sel) => document.querySelectorAll(sel);
+
+  const sourceText = $("#sourceText");
+  const charCounter = $("#charCounter");
+  const btnGenerate = $("#btnGenerate");
+  const statsBar = $("#statsBar");
+  const questionsContainer = $("#questionsContainer");
+  const emptyStateEl = $("#emptyState");
+  const emptyStateTemplate = emptyStateEl.cloneNode(true);
+  const previewNav = $("#previewNav");
+  const previewIndicator = $("#previewIndicator");
+  const toastContainer = $("#toastContainer");
+
+  function t(key) {
+    const pack = i18n[state.uiLang] || i18n.ru;
+    return pack[key] || i18n.ru[key] || key;
+  }
+
+  function applyI18n() {
+    $("[data-i18n]").forEach((el) => {
+      if (el.closest("#authModal")) return;
+      const key = el.getAttribute("data-i18n");
+      if (key) el.textContent = t(key);
+    });
+    const ph = sourceText.getAttribute("data-i18n-placeholder");
+    if (ph) sourceText.placeholder = t(ph);
+    document.documentElement.lang = state.uiLang === "kz" ? "kk" : state.uiLang;
+  }
+
+  function showToast(message, type = "demo") {
+    const el = document.createElement("div");
+    el.className = `toast ${type === "success" ? "success" : type}`;
+    el.textContent = message;
+    toastContainer.appendChild(el);
+    setTimeout(() => {
+      el.style.opacity = "0";
+      el.style.transition = "opacity 0.3s";
+      setTimeout(() => el.remove(), 300);
+    }, 2800);
+  }
+
+  function updateCharCounter() {
+    const len = sourceText.value.length;
+    charCounter.textContent = `${len} / ${MAX_CHARS}`;
+    charCounter.classList.toggle("warn", len > MAX_CHARS * 0.9);
+    btnGenerate.disabled = len === 0;
+  }
+
+  function setActiveInGroup(container, selector, attr, value) {
+    container.querySelectorAll(selector).forEach((btn) => {
+      btn.classList.toggle("active", btn.getAttribute(attr) === value);
+    });
+  }
+
+  function getQuestionPool() {
+    const lang = mockQuestions[state.testLang] ? state.testLang : "ru";
+    const diff = mockQuestions[lang][state.difficulty]
+      ? state.difficulty
+      : "medium";
+    return [...mockQuestions[lang][diff]];
+  }
+
+  function renderQuestionCard(q, index) {
+    const card = document.createElement("article");
+    card.className = "question-card glass";
+    card.dataset.index = String(index);
+
+    const letters = ["A", "B", "C", "D"];
+    const optionsHtml = q.options
+      .map(
+        (opt, i) =>
+          `<div class="option${i === q.correct ? " correct" : ""}">
+            <span class="radio"></span>
+            <span>${letters[i]}. ${escapeHtml(opt)}</span>
+          </div>`
+      )
+      .join("");
+
+    card.innerHTML = `
+      <div class="q-header">
+        <span class="q-number">${index + 1}</span>
+        <p class="q-text">${escapeHtml(q.q)}</p>
+      </div>
+      <div class="q-actions">
+        <button type="button" class="edit" title="Edit">✎</button>
+        <button type="button" class="delete" title="Delete">🗑</button>
+      </div>
+      <div class="options-list">${optionsHtml}</div>
+    `;
+
+    card.querySelector(".edit").addEventListener("click", () => {
+      const updated = prompt(t("edit.prompt"), q.q);
+      if (updated && updated.trim()) {
+        q.q = updated.trim();
+        state.questions[index] = q;
+        renderQuestions();
+        saveToStorage();
+      }
+    });
+
+    card.querySelector(".delete").addEventListener("click", () => {
+      state.questions.splice(index, 1);
+      renderQuestions();
+      saveToStorage();
+    });
+
+    return card;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderQuestions() {
+    questionsContainer.innerHTML = "";
+    questionsContainer.className = "questions-container";
+
+    if (state.questions.length === 0) {
+      const empty = emptyStateTemplate.cloneNode(true);
+      const msg = empty.querySelector("[data-i18n='empty.message']");
+      if (msg) msg.textContent = t("empty.message");
+      questionsContainer.appendChild(empty);
+      previewNav.classList.remove("visible");
+      return;
+    }
+
+    if (state.view === "cards") {
+      questionsContainer.classList.add("view-cards");
+    } else if (state.view === "preview") {
+      questionsContainer.classList.add("view-preview");
+      previewNav.classList.add("visible");
+    } else {
+      previewNav.classList.remove("visible");
+    }
+
+    state.questions.forEach((q, i) => {
+      const card = renderQuestionCard(q, i);
+      if (state.view === "preview") {
+        card.classList.toggle("preview-active", i === state.previewIndex);
+      }
+      questionsContainer.appendChild(card);
+    });
+
+    updatePreviewIndicator();
+  }
+
+  function updatePreviewIndicator() {
+    const total = state.questions.length;
+    if (total === 0) {
+      previewIndicator.textContent = "0 / 0";
+      return;
+    }
+    previewIndicator.textContent = `${state.previewIndex + 1} / ${total}`;
+  }
+
+  function generateQuestions() {
+    const pool = getQuestionPool();
+    const shuffled = pool.sort(() => Math.random() - 0.5);
+    state.questions = shuffled.slice(0, Math.min(state.count, shuffled.length));
+    state.previewIndex = 0;
+
+    const tokens = 800 + Math.floor(Math.random() * 600);
+    $("#statTime").textContent = "1.4s";
+    $("#statTokens").textContent = tokens.toLocaleString();
+    $("#statAccuracy").textContent = `${94 + Math.floor(Math.random() * 5)}%`;
+    statsBar.classList.add("visible");
+
+    state.usageCount = Math.min(100, state.usageCount + 1);
+    $("#gaugeUsed").textContent = String(state.usageCount);
+    const offset = 188.5 - (state.usageCount / 100) * 188.5;
+    $("#gaugeFill").style.strokeDashoffset = String(offset);
+
+    renderQuestions();
+    showToast(t("toast.generated") + state.questions.length, "demo");
+    saveToStorage();
+  }
+
+  function saveToStorage() {
+    try {
+      localStorage.setItem(
+        "quizai-draft",
+        JSON.stringify({
+          source: sourceText.value,
+          questions: state.questions,
+          config: {
+            type: state.type,
+            difficulty: state.difficulty,
+            count: state.count,
+            testLang: state.testLang,
+          },
+          usageCount: state.usageCount,
+        })
+      );
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem("quizai-draft");
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (data.source) sourceText.value = data.source;
+      if (data.questions?.length) {
+        state.questions = data.questions;
+        statsBar.classList.add("visible");
+        $("#statTime").textContent = "—";
+        $("#statTokens").textContent = "—";
+        $("#statAccuracy").textContent = "—";
+      }
+      if (data.config) {
+        Object.assign(state, data.config);
+        syncConfigUI();
+      }
+      if (data.usageCount) {
+        state.usageCount = data.usageCount;
+        $("#gaugeUsed").textContent = String(state.usageCount);
+        const offset = 188.5 - (state.usageCount / 100) * 188.5;
+        $("#gaugeFill").style.strokeDashoffset = String(offset);
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function syncConfigUI() {
+    setActiveInGroup($("#typeCards"), ".type-card", "data-type", state.type);
+    setActiveInGroup(
+      $("#difficultyControl"),
+      "button",
+      "data-difficulty",
+      state.difficulty
+    );
+    setActiveInGroup($("#countPills"), "button", "data-count", String(state.count));
+    setActiveInGroup(
+      $("#testLangList"),
+      "button",
+      "data-test-lang",
+      state.testLang
+    );
+  }
+
+  function shuffleQuestions() {
+    if (state.questions.length < 2) return;
+    for (let i = state.questions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [state.questions[i], state.questions[j]] = [state.questions[j], state.questions[i]];
+    }
+    renderQuestions();
+    showToast(t("toast.shuffled"));
+    saveToStorage();
+  }
+
+  function initSourceText() {
+    if (!loadFromStorage()) {
+      sourceText.value = DEFAULT_SOURCE[state.testLang] || DEFAULT_SOURCE.ru;
+    }
+    updateCharCounter();
+  }
+
+  function bindEvents() {
+    sourceText.addEventListener("input", () => {
+      updateCharCounter();
+    });
+
+    btnGenerate.addEventListener("click", async () => {
+      if (btnGenerate.disabled) return;
+      if (window.QuizAIAuth && !window.QuizAIAuth.requireAuth()) return;
+      btnGenerate.classList.add("loading");
+      btnGenerate.disabled = true;
+      await new Promise((r) => setTimeout(r, GENERATE_DELAY_MS));
+      btnGenerate.classList.remove("loading");
+      generateQuestions();
+      updateCharCounter();
+    });
+
+    $("#typeCards").addEventListener("click", (e) => {
+      const card = e.target.closest(".type-card");
+      if (!card) return;
+      state.type = card.dataset.type;
+      setActiveInGroup($("#typeCards"), ".type-card", "data-type", state.type);
+    });
+
+    $("#difficultyControl").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-difficulty]");
+      if (!btn) return;
+      state.difficulty = btn.dataset.difficulty;
+      setActiveInGroup(
+        $("#difficultyControl"),
+        "button",
+        "data-difficulty",
+        state.difficulty
+      );
+    });
+
+    $("#countPills").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-count]");
+      if (!btn) return;
+      state.count = parseInt(btn.dataset.count, 10);
+      setActiveInGroup($("#countPills"), "button", "data-count", String(state.count));
+    });
+
+    $("#testLangList").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-test-lang]");
+      if (!btn) return;
+      state.testLang = btn.dataset.testLang;
+      setActiveInGroup(
+        $("#testLangList"),
+        "button",
+        "data-test-lang",
+        state.testLang
+      );
+    });
+
+    $(".lang-switch button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.uiLang = btn.dataset.uiLang;
+        $(".lang-switch button").forEach((b) =>
+          b.classList.toggle("active", b === btn)
+        );
+        applyI18n();
+        window.dispatchEvent(
+          new CustomEvent("quizai-lang", { detail: state.uiLang })
+        );
+      });
+    });
+
+    $("#viewTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-view]");
+      if (!btn) return;
+      state.view = btn.dataset.view;
+      setActiveInGroup($("#viewTabs"), "button", "data-view", state.view);
+      state.previewIndex = 0;
+      renderQuestions();
+    });
+
+    $("#btnShuffle").addEventListener("click", shuffleQuestions);
+
+    $("#btnFilter").addEventListener("click", () => showToast(t("toast.filter")));
+
+    $("#btnSave").addEventListener("click", () => {
+      saveToStorage();
+      showToast(t("toast.saved"));
+    });
+
+    $("#btnRefresh").addEventListener("click", () => {
+      renderQuestions();
+      showToast(t("toast.refreshed"));
+    });
+
+    $("[data-demo]").forEach((el) => {
+      el.addEventListener("click", () => showToast(t("toast.demo")));
+    });
+
+    $("#quickNew").addEventListener("click", () => {
+      sourceText.value = "";
+      state.questions = [];
+      statsBar.classList.remove("visible");
+      renderQuestions();
+      updateCharCounter();
+      showToast(t("toast.cleared"));
+      localStorage.removeItem("quizai-draft");
+    });
+
+    $("#configToggle").addEventListener("click", () => {
+      $("#configSidebar").classList.toggle("collapsed");
+    });
+
+    $("#previewPrev").addEventListener("click", () => {
+      if (state.previewIndex > 0) {
+        state.previewIndex--;
+        renderQuestions();
+      }
+    });
+
+    $("#previewNext").addEventListener("click", () => {
+      if (state.previewIndex < state.questions.length - 1) {
+        state.previewIndex++;
+        renderQuestions();
+      }
+    });
+  }
+
+  function init() {
+    window.QuizAI = { showToast };
+    applyI18n();
+    window.dispatchEvent(
+      new CustomEvent("quizai-lang", { detail: state.uiLang })
+    );
+    syncConfigUI();
+    initSourceText();
+    renderQuestions();
+    bindEvents();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+</body>
+</html>

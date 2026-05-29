@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizAI — Generation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top-nav">
+    <a href="#" class="logo">Quiz<span>AI</span></a>
+    <nav class="nav-links">
+      <a href="#" data-i18n="nav.dashboard">Dashboard</a>
+      <a href="#" class="active" data-i18n="nav.generation">Generation</a>
+      <a href="#" data-i18n="nav.history">History</a>
+      <a href="#" data-i18n="nav.favorites">Favorites</a>
+    </nav>
+    <div class="nav-right">
+      <div class="lang-switch" role="group" aria-label="Interface language">
+        <button type="button" data-ui-lang="ru" class="active">RU</button>
+        <button type="button" data-ui-lang="kz">KZ</button>
+        <button type="button" data-ui-lang="en">EN</button>
+      </div>
+      <div class="auth-nav" id="authNav">
+        <button type="button" class="btn-auth-ghost" id="btnLogin" data-i18n="auth.login">Войти</button>
+        <button type="button" class="btn-auth-primary" id="btnRegister" data-i18n="auth.register">Регистрация</button>
+      </div>
+      <div class="user-menu hidden" id="userMenu">
+        <button type="button" class="avatar" id="avatarBtn" aria-haspopup="true" aria-expanded="false">
+          <span id="avatarInitials">?</span>
+        </button>
+        <div class="user-dropdown glass hidden" id="userDropdown">
+          <p class="user-dropdown-name" id="userDisplayName">User</p>
+          <p class="user-dropdown-email" id="userDisplayEmail">user@email.com</p>
+          <button type="button" id="btnLogout" data-i18n="auth.logout">Выйти</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <button type="button" class="config-toggle" id="configToggle" data-i18n="config.toggle">
+      ⚙ Test settings
+    </button>
+
+    <aside class="config-sidebar collapsed" id="configSidebar">
+      <div class="config-panel">
+        <div>
+          <p class="section-label" data-i18n="config.label">AI Generation</p>
+          <h2 class="section-title" data-i18n="config.title">Create test</h2>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.questionType">Question type</h3>
+          <div class="type-cards" id="typeCards">
+            <button type="button" class="type-card active" data-type="mcq">
+              <span class="icon">☑</span>
+              <span>
+                <span class="label" data-i18n="type.mcq">MCQ</span>
+                <span class="desc" data-i18n="type.mcqDesc">Multiple choice</span>
+              </span>
+            </button>
+            <button type="button" class="type-card" data-type="open">
+              <span class="icon">✎</span>
+              <span>
+                <span class="label" data-i18n="type.open">Open-ended</span>
+                <span class="desc" data-i18n="type.openDesc">Free text answer</span>
+              </span>
+            </button>
+            <button type="button" class="type-card" data-type="quiz">
+              <span class="icon">?</span>
+              <span>
+                <span class="label" data-i18n="type.quiz">Quiz</span>
+                <span class="desc" data-i18n="type.quizDesc">Mixed format</span>
+              </span>
+            </button>
+            <button type="button" class="type-card" data-type="tf">
+              <span class="icon">✓</span>
+              <span>
+                <span class="label" data-i18n="type.tf">True/False</span>
+                <span class="desc" data-i18n="type.tfDesc">Binary choice</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.difficulty">Difficulty</h3>
+          <div class="segmented" id="difficultyControl">
+            <button type="button" data-difficulty="easy" data-i18n="diff.easy">Easy</button>
+            <button type="button" class="active" data-difficulty="medium" data-i18n="diff.medium">Medium</button>
+            <button type="button" data-difficulty="hard" data-i18n="diff.hard">Hard</button>
+          </div>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.count">Number of questions</h3>
+          <div class="count-pills" id="countPills">
+            <button type="button" data-count="5">5</button>
+            <button type="button" class="active" data-count="10">10</button>
+            <button type="button" data-count="15">15</button>
+            <button type="button" data-count="20">20</button>
+          </div>
+        </div>
+
+        <div class="config-block glass">
+          <h3 data-i18n="config.testLang">Test language</h3>
+          <div class="lang-list" id="testLangList">
+            <button type="button" class="active" data-test-lang="ru">
+              <span data-i18n="lang.ru">Russian</span>
+              <span class="flag">RU</span>
+            </button>
+            <button type="button" data-test-lang="kz">
+              <span data-i18n="lang.kz">Kazakh</span>
+              <span class="flag">KZ</span>
+            </button>
+            <button type="button" data-test-lang="en">
+              <span data-i18n="lang.en">English</span>
+              <span class="flag">EN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-workspace">
+      <section class="ai-box glass">
+        <p class="section-label" data-i18n="ai.label">AI Assistant</p>
+        <textarea
+          id="sourceText"
+          maxlength="5000"
+          placeholder=""
+          data-i18n-placeholder="ai.placeholder"
+        ></textarea>
+        <div class="ai-toolbar">
+          <button type="button" class="toolbar-btn" data-demo="pdf">📄 <span data-i18n="ai.importPdf">Import PDF</span></button>
+          <button type="button" class="toolbar-btn" data-demo="upload">📎 <span data-i18n="ai.upload">Upload document</span></button>
+          <button type="button" class="toolbar-btn" data-demo="url">🔗 <span data-i18n="ai.url">Insert URL</span></button>
+          <span class="char-counter" id="charCounter">0 / 5000</span>
+        </div>
+        <button type="button" class="btn-generate" id="btnGenerate" disabled>
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-text">✨ <span data-i18n="ai.generate">Generate questions</span></span>
+        </button>
+      </section>
+
+      <div class="stats-bar glass" id="statsBar">
+        <span><span data-i18n="stats.time">Time</span>: <strong id="statTime">—</strong></span>
+        <span><span data-i18n="stats.tokens">Tokens</span>: <strong id="statTokens">—</strong></span>
+        <span><span data-i18n="stats.accuracy">Accuracy</span>: <strong id="statAccuracy">—</strong></span>
+        <span><span data-i18n="stats.model">Model</span>: <strong>GPT-4o</strong></span>
+      </div>
+
+      <section class="results-section glass">
+        <div class="results-header">
+          <div class="view-tabs" id="viewTabs">
+            <button type="button" class="active" data-view="list" data-i18n="view.list">List</button>
+            <button type="button" data-view="cards" data-i18n="view.cards">Cards</button>
+            <button type="button" data-view="preview" data-i18n="view.preview">Preview</button>
+          </div>
+          <div class="result-actions">
+            <button type="button" id="btnFilter" data-i18n="action.filter">Filter</button>
+            <button type="button" id="btnShuffle" data-i18n="action.shuffle">Shuffle</button>
+            <button type="button" data-demo="qr" data-i18n="action.qr">QR-test</button>
+            <button type="button" data-demo="pdf-export" data-i18n="action.pdf">PDF</button>
+            <button type="button" id="btnSave" data-i18n="action.save">Save</button>
+            <button type="button" id="btnRefresh" data-i18n="action.refresh">Refresh</button>
+          </div>
+        </div>
+
+        <div class="questions-container" id="questionsContainer">
+          <div class="empty-state" id="emptyState">
+            <div class="icon-large">📝</div>
+            <p data-i18n="empty.message">Enter source text and click Generate questions</p>
+          </div>
+        </div>
+
+        <div class="preview-nav" id="previewNav">
+          <button type="button" id="previewPrev" data-i18n="preview.prev">← Previous</button>
+          <span id="previewIndicator">1 / 1</span>
+          <button type="button" id="previewNext" data-i18n="preview.next">Next →</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="info-sidebar">
+      <div class="info-block glass">
+        <h3 data-i18n="recent.title">Recent tests</h3>
+        <ul class="recent-list">
+          <li>
+            <span class="name" data-i18n="recent.bio">Biology 9th grade</span>
+            <span class="time">2h ago</span>
+          </li>
+          <li>
+            <span class="name" data-i18n="recent.history">History of Kazakhstan</span>
+            <span class="time">Yesterday</span>
+          </li>
+          <li>
+            <span class="name" data-i18n="recent.math">Algebra basics</span>
+            <span class="time">3 days ago</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="info-block glass usage-widget">
+        <h3 data-i18n="usage.title">Monthly usage</h3>
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="gauge-bg" cx="60" cy="60" r="50" />
+            <circle class="gauge-fill" id="gaugeFill" cx="60" cy="60" r="50" />
+          </svg>
+          <div class="gauge-value"><span id="gaugeUsed">47</span> <small>/ 100</small></div>
+        </div>
+        <p class="usage-label" data-i18n="usage.label">generations this month</p>
+        <button type="button" class="btn-upgrade" data-demo="upgrade" data-i18n="usage.upgrade">Upgrade plan</button>
+      </div>
+
+      <div class="info-block glass">
+        <h3 data-i18n="quick.title">Quick actions</h3>
+        <div class="quick-actions">
+          <button type="button" id="quickNew" data-demo="new">
+            <span class="qa-icon">+</span>
+            <span data-i18n="quick.new">New test</span>
+          </button>
+          <button type="button" data-demo="favorites">
+            <span class="qa-icon">★</span>
+            <span data-i18n="quick.favorites">Favorites</span>
+          </button>
+          <button type="button" data-demo="share">
+            <span class="qa-icon">↗</span>
+            <span data-i18n="quick.share">Share</span>
+          </button>
+          <button type="button" data-demo="settings">
+            <span class="qa-icon">⚙</span>
+            <span data-i18n="quick.settings">Settings</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <div class="modal-overlay hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <div class="modal glass auth-modal">
+      <button type="button" class="modal-close" id="authModalClose" aria-label="Close">×</button>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-tab="register" data-i18n="auth.tabRegister">Регистрация</button>
+        <button type="button" class="auth-tab" data-auth-tab="login" data-i18n="auth.tabLogin">Вход</button>
+      </div>
+
+      <h2 class="auth-modal-title" id="authModalTitle" data-i18n="auth.registerTitle">Создать аккаунт</h2>
+      <p class="auth-modal-sub" data-i18n="auth.registerSub">Сохраняйте тесты и отслеживайте лимиты</p>
+
+      <form class="auth-form" id="registerForm" novalidate>
+        <label>
+          <span data-i18n="auth.name">Имя</span>
+          <input type="text" id="regName" name="name" autocomplete="name" required />
+        </label>
+        <label>
+          <span data-i18n="auth.email">Email</span>
+          <input type="email" id="regEmail" name="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span data-i18n="auth.password">Пароль</span>
+          <input type="password" id="regPassword" name="password" autocomplete="new-password" minlength="6" required />
+        </label>
+        <label>
+          <span data-i18n="auth.passwordConfirm">Подтвердите пароль</span>
+          <input type="password" id="regPasswordConfirm" name="passwordConfirm" autocomplete="new-password" required />
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="regAgree" required />
+          <span data-i18n="auth.agree">Я согласен с условиями использования</span>
+        </label>
+        <p class="form-error hidden" id="registerError"></p>
+        <button type="submit" class="btn-auth-submit" data-i18n="auth.submitRegister">Зарегистрироваться</button>
+      </form>
+
+      <form class="auth-form hidden" id="loginForm" novalidate>
+        <label>
+          <span data-i18n="auth.email">Email</span>
+          <input type="email" id="loginEmail" name="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span data-i18n="auth.password">Пароль</span>
+          <input type="password" id="loginPassword" name="password" autocomplete="current-password" required />
+        </label>
+        <p class="form-error hidden" id="loginError"></p>
+        <button type="submit" class="btn-auth-submit" data-i18n="auth.submitLogin">Войти</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
